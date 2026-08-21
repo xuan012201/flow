@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flow — try it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#F4F6FA; --surface:#FFF; --ink:#14171D; --ink2:#59606D; --ink3:#98A0AE;
+    --brand:#0B5CFF; --soft:#E8F0FF; --line:#E6E9EF; --warn:#EB6834; --good:#12A150;
+    --r:18px;
+    --sans:'Inter','Noto Sans SC',system-ui,-apple-system,"Segoe UI",sans-serif;
+    --disp:'Poppins','Noto Sans SC',system-ui,sans-serif;
+    --gx:50%; --gy:30%; --fov:118px;
+  }
+  html{height:100%}
+  body{margin:0;min-height:100%;background:var(--bg);font-family:var(--sans);color:var(--ink);
+    -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.65}
+  .wrap{max-width:1220px;margin:0 auto;padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;
+    gap:clamp(14px,2vw,22px)}
+
+  /* ── header ─────────────────────────────── */
+  .head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .head .tx{flex:1 1 340px;min-width:260px}
+  .head h1{font-family:var(--disp);font-size:clamp(21px,2.4vw,30px);font-weight:600;margin:0 0 8px;letter-spacing:-.02em;line-height:1.25}
+  .head p{margin:0;font-size:clamp(13.5px,1.15vw,15.5px);color:var(--ink2);line-height:1.65;max-width:640px}
+  .ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .seg{display:flex;background:#E9ECF2;border-radius:99px;padding:3px}
+  .seg button{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink2);
+    padding:6px 13px;border-radius:99px;cursor:pointer;transition:.18s;white-space:nowrap}
+  .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(20,23,29,.13)}
+  .ghost{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 14px;font:inherit;
+    font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;transition:.18s;white-space:nowrap}
+  .ghost:hover{border-color:var(--brand);color:var(--brand)}
+
+  /* ── section shell ──────────────────────── */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(16px,2vw,26px)}
+  .stephd{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+  .stephd .n{width:26px;height:26px;border-radius:99px;background:var(--ink);color:#fff;display:grid;
+    place-items:center;font-size:12.5px;font-weight:700;flex:none;font-family:var(--disp)}
+  .stephd h2{font-family:var(--disp);font-size:clamp(16px,1.5vw,19px);font-weight:600;margin:0;letter-spacing:-.01em}
+  .stepdesc{font-size:clamp(13px,1.1vw,14.5px);color:var(--ink2);margin:0 0 18px;max-width:640px;line-height:1.7}
+  .stepdesc b{color:var(--ink);font-weight:600}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,320px);gap:clamp(16px,2.2vw,30px);align-items:stretch}
+
+  /* ── device ─────────────────────────────── */
+  .stage{background:linear-gradient(165deg,#EFF3F9,#E3E9F3);border-radius:14px;display:flex;align-items:center;
+    justify-content:center;padding:clamp(14px,2vw,26px);position:relative;min-height:0;height:clamp(430px,58vh,560px)}
+  .device{position:relative;background:#fff;display:flex;flex-direction:column;overflow:hidden;
+    transition:width .4s cubic-bezier(.2,.8,.3,1),border-radius .4s,max-width .4s}
+  .device.phone{width:min(318px,100%);height:100%;border-radius:34px;border:8px solid #14171D;
+    box-shadow:0 24px 56px -18px rgba(20,23,29,.4)}
+  .device.desktop{width:100%;max-width:640px;height:100%;border-radius:12px;border:1px solid #D6DBE4;
+    box-shadow:0 22px 50px -20px rgba(20,23,29,.32)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:96px;height:20px;background:#14171D;
+    border-radius:0 0 12px 12px;z-index:9}
+  .device.desktop .notch{display:none}
+  .statusbar{display:flex;justify-content:space-between;padding:6px 18px 2px;font-size:10px;font-weight:600;flex:none}
+  .statusbar .rt{display:flex;gap:3px;align-items:center}
+  .statusbar .rt i{width:3px;height:3px;border-radius:99px;background:var(--ink3);display:block}
+  .statusbar .rt i:nth-child(1){height:5px}.statusbar .rt i:nth-child(2){height:7px}
+  .device.desktop .statusbar{display:none}
+  .winbar{display:none;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--line);
+    background:#F7F8FA;flex:none}
+  .device.desktop .winbar{display:flex}
+  .winbar .tl{display:flex;gap:5px}
+  .winbar .tl i{width:9px;height:9px;border-radius:99px;display:block;background:#DDE1E8}
+  .winbar .url{flex:1;background:#fff;border:1px solid var(--line);border-radius:7px;padding:4px 11px;
+    font-size:10.5px;color:var(--ink3);text-align:center;max-width:250px;margin:0 auto}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:4px 17px 8px;flex:none;gap:10px}
+  .appbar span{font-size:10.5px;color:var(--ink3)}
+  .device.desktop .appbar{padding:9px 24px 5px}
+
+  .pane{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:0 17px 22px;scrollbar-width:none;cursor:crosshair}
+  .pane::-webkit-scrollbar{display:none}
+  .device.desktop .pane{padding:0 clamp(22px,5%,44px) 24px}
+  .pagewrap{position:relative}
+  .layer{position:relative;z-index:2}
+  .layer.blurred{position:absolute;left:0;right:0;top:0;z-index:1;filter:blur(2.7px);pointer-events:none;user-select:none}
+  .lens .layer.sharp{
+    -webkit-mask-image:radial-gradient(circle var(--fov) at var(--gx) var(--gy),#000 0%,#000 44%,rgba(0,0,0,.35) 74%,transparent 100%);
+    mask-image:radial-gradient(circle var(--fov) at var(--gx) var(--gy),#000 0%,#000 44%,rgba(0,0,0,.35) 74%,transparent 100%)}
+
+  h3.hd{font-family:var(--disp);font-size:15px;line-height:1.3;margin:4px 0 3px;font-weight:600}
+  .byline{font-size:10px;color:var(--ink3);margin-bottom:2px}
+  .p{margin:13px 0;font-size:13.5px;line-height:1.9}
+  .device.desktop .p{font-size:14.5px}
+  .w{border-radius:4px;transition:background-color .35s}
+  .w.held{background:var(--soft)}
+  .w.frontier{background:var(--soft);box-shadow:inset 0 -2px 0 rgba(11,92,255,.45)}
+
+  .hintarrow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:18;text-align:center;
+    pointer-events:none;transition:opacity .5s}
+  .hintarrow .bub{background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:10px 15px;border-radius:11px;
+    line-height:1.5;max-width:210px;box-shadow:0 10px 26px -8px rgba(0,0,0,.4);animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .hintarrow.off{opacity:0}
+
+  .helpnote{position:absolute;left:11px;right:11px;bottom:11px;background:var(--ink);color:#fff;border-radius:11px;
+    padding:9px 12px;font-size:11.5px;line-height:1.5;z-index:15;transform:translateY(140%);opacity:0;
+    transition:.45s cubic-bezier(.2,.85,.25,1);display:flex;gap:8px;align-items:center}
+  .helpnote.show{transform:none;opacity:1}
+  .helpnote i{width:6px;height:6px;border-radius:99px;background:#5EE08A;flex:none}
+
+  .gaze{position:absolute;width:16px;height:16px;border-radius:99px;pointer-events:none;z-index:12;
+    transform:translate(-50%,-50%);transition:opacity .3s}
+  .gaze::before{content:"";position:absolute;inset:0;border-radius:99px;border:1.5px solid rgba(11,92,255,.8);
+    box-shadow:0 0 0 5px rgba(11,92,255,.11)}
+  .gaze.hide{opacity:0}
+
+  .veil{position:absolute;inset:0;background:rgba(244,246,250,.93);backdrop-filter:blur(4px);display:grid;
+    place-items:center;opacity:0;pointer-events:none;transition:.45s;z-index:14;text-align:center;padding:20px}
+  .device.away .veil{opacity:1}
+  .ring{width:40px;height:40px;margin:0 auto 12px;border-radius:99px;border:2px solid var(--line);
+    border-top-color:var(--brand);animation:spin 2.6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .veil strong{display:block;font-family:var(--disp);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+  .veil small{display:block;font-size:11.5px;color:var(--ink2);margin-top:6px;line-height:1.6;max-width:210px}
+
+  .sheet{position:absolute;left:11px;right:11px;bottom:11px;background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;box-shadow:0 18px 44px -12px rgba(20,23,29,.32);padding:15px 16px;z-index:16;
+    transform:translateY(140%);opacity:0;transition:transform .55s cubic-bezier(.2,.85,.25,1),opacity .4s;
+    max-height:78%;overflow-y:auto;scrollbar-width:none}
+  .sheet::-webkit-scrollbar{display:none}
+  .sheet.show{transform:none;opacity:1}
+  .sheet .st{font-family:var(--disp);font-size:13px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .sheet .st i{width:19px;height:19px;border-radius:6px;background:var(--brand);display:grid;place-items:center;flex:none}
+  .sheet .lbl{font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--ink3);margin:0 0 4px}
+  .sheet .quote{border-left:2px solid var(--brand);padding:2px 0 2px 10px;font-size:12.5px;line-height:1.6;margin:0 0 11px}
+  .sheet .rec{font-size:12px;line-height:1.65;color:var(--ink2);margin:0 0 13px}
+  .sheet button{border:0;background:var(--brand);color:#fff;font:inherit;font-size:12.5px;font-weight:600;
+    padding:9px 15px;border-radius:9px;cursor:pointer;width:100%}
+
+  /* ── side panel ─────────────────────────── */
+  .side{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .panel{background:#FAFBFD;border:1px solid var(--line);border-radius:14px;padding:15px 16px}
+  .panel .ph{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--ink3);margin:0 0 12px}
+  .row{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:0;padding-top:0}
+  .row .k{font-size:13px;color:var(--ink2);flex:1;line-height:1.4}
+  .row .v{font-size:13.5px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .pips{display:flex;gap:3px}
+  .pips i{width:9px;height:9px;border-radius:2px;background:#E1E5EC;display:block}
+  .pips i.on{background:var(--brand)}
+  .pips i.on.warn{background:var(--warn)}
+  .fw{font-size:12px;font-weight:600;color:var(--ink2)}
+
+  .bigbtn{border:0;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:600;padding:13px;
+    border-radius:11px;cursor:pointer;width:100%;transition:.18s}
+  .bigbtn:hover{background:#000}
+  .bigbtn.blue{background:var(--brand)} .bigbtn.blue:hover{background:#0A50E0}
+  .chips{display:flex;gap:6px;margin-bottom:11px}
+  .chips button{flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 4px;cursor:pointer;
+    font:inherit;font-size:11px;color:var(--ink3);transition:.18s;line-height:1.35}
+  .chips button b{display:block;font-size:13px;color:var(--ink);font-weight:600;margin-bottom:1px}
+  .chips button[aria-pressed="true"]{border-color:var(--brand);background:#F6FAFF;box-shadow:0 0 0 3px rgba(11,92,255,.08)}
+  .aside{font-size:12px;color:var(--ink3);line-height:1.6;margin:12px 0 0}
+  .aside b{color:var(--ink2)}
+
+  /* ── findings ───────────────────────────── */
+  .finds{display:flex;flex-direction:column;gap:12px}
+  .find{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:14px 17px;
+    background:#FAFBFD;animation:rise .45s both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .find .vis{flex:none;width:104px}
+  .find .tx{flex:1;font-size:clamp(13px,1.1vw,14.5px);line-height:1.65;color:var(--ink2)}
+  .find .tx b{color:var(--ink);font-weight:600}
+  .strip{display:flex;gap:2px;height:26px}
+  .strip i{flex:1;border-radius:3px;background:#E6E9EF;display:block}
+  .strip i.read{background:var(--brand)}
+  .strip i.skim{background:#9EC5F4}
+  .strip i.gapx{background:repeating-linear-gradient(135deg,#F0F2F6 0 3px,#C9CFD9 3px 4px);box-shadow:inset 0 0 0 1px #D8DDE5}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;align-items:center;height:26px}
+  .dots i{width:11px;height:11px;border-radius:99px;background:var(--warn);display:block}
+  .fade{height:26px;border-radius:4px;background:linear-gradient(90deg,var(--brand) 0%,var(--brand) 36%,#9EC5F4 60%,#E6E9EF 100%);position:relative}
+  .fade b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);left:54%;border-radius:2px}
+  .empty{border:1px dashed var(--line);border-radius:14px;padding:28px 20px;text-align:center;color:var(--ink3);
+    font-size:13.5px;line-height:1.7}
+
+  /* ── changes + before/after ─────────────── */
+  .changes{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+  .chg{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+    background:#fff;cursor:pointer;transition:.18s;animation:rise .4s both}
+  .chg:hover{border-color:#BFD4FF}
+  .chg[aria-checked="true"]{border-color:var(--brand);background:#F7FAFF}
+  .box{width:19px;height:19px;border-radius:6px;border:1.5px solid #C6CCD6;flex:none;margin-top:2px;display:grid;
+    place-items:center;transition:.15s}
+  .chg[aria-checked="true"] .box{background:var(--brand);border-color:var(--brand)}
+  .box svg{opacity:0;transition:.15s}
+  .chg[aria-checked="true"] .box svg{opacity:1}
+  .chg .t{font-size:13.5px;line-height:1.55;color:var(--ink)}
+  .chg .t small{display:block;font-size:11.5px;color:var(--ink3);margin-top:3px;line-height:1.5}
+  .applyrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+  .applyrow .bigbtn{width:auto;padding:12px 24px}
+  .applied{font-size:12.5px;color:var(--good);font-weight:600}
+
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2vw,26px)}
+  .bacol{display:flex;flex-direction:column;gap:9px}
+  .balbl{font-size:12.5px;font-weight:600;color:var(--ink3);display:flex;align-items:center;gap:7px}
+  .balbl i{width:7px;height:7px;border-radius:99px;background:#C6CCD6;display:block}
+  .balbl.after{color:var(--brand)} .balbl.after i{background:var(--brand)}
+  .mini{width:100%;max-width:280px;margin:0 auto;border:7px solid #14171D;border-radius:26px;background:#fff;
+    overflow:hidden;position:relative;box-shadow:0 14px 32px -14px rgba(20,23,29,.34);transition:border-color .3s}
+  .mini.hl{border-color:var(--brand);box-shadow:0 16px 38px -12px rgba(11,92,255,.3)}
+  .mini .nt{position:absolute;top:0;left:50%;transform:translateX(-50%);width:70px;height:14px;background:#14171D;
+    border-radius:0 0 9px 9px;z-index:3}
+  .mini.hl .nt{background:var(--brand)}
+  .mini .sb{display:flex;justify-content:space-between;padding:5px 13px 2px;font-size:8px;font-weight:600}
+  .mini .ab{font-size:8.5px;color:var(--ink3);text-align:center;padding:1px 0 7px}
+  .mini .bd{padding:0 14px 16px;font-size:10px;line-height:1.85;color:var(--ink);height:292px;overflow:hidden;
+    -webkit-mask-image:linear-gradient(#000 88%,transparent 100%);mask-image:linear-gradient(#000 88%,transparent 100%)}
+  .mini p{margin:0 0 9px}
+  .mini .mk{display:inline-block;font-size:7.5px;font-weight:700;letter-spacing:.05em;background:var(--brand);
+    color:#fff;padding:2px 8px;border-radius:99px;margin-bottom:8px}
+  .mini .st{border-left:2px solid var(--soft);padding-left:9px;margin:0 0 10px}
+  .mini .st .sh{font-size:8px;font-weight:700;letter-spacing:.05em;color:var(--brand);margin-bottom:2px}
+  .mini .high{background:var(--soft);border-radius:3px;padding:0 2px}
+  .mini .pill{display:flex;gap:7px;align-items:center;background:#FFF6F0;border:1px solid #F5D9C6;border-radius:8px;
+    padding:7px 9px;font-size:9px;line-height:1.5;color:#7A4A2C;margin:0 0 10px}
+  .mini .brk{display:flex;align-items:center;gap:7px;margin:11px 0}
+  .mini .brk .ln{flex:1;height:1px;background:var(--line)}
+  .mini .brk .tg{font-size:7.5px;font-weight:700;color:var(--good);background:#F0FAF4;border:1px solid #C9EBD8;
+    padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .bacap{font-size:12px;color:var(--ink3);line-height:1.6;text-align:center;margin:2px auto 0;max-width:280px}
+
+  .foot{font-size:12px;color:var(--ink3);line-height:1.7;text-align:center;padding:4px 0 10px;max-width:660px;margin:0 auto}
+
+  @media (max-width:900px){
+    .split{grid-template-columns:1fr}
+    .stage{height:clamp(400px,52vh,500px)}
+    .ba{grid-template-columns:1fr}
+  }
+  @media (max-width:560px){
+    .find{flex-direction:column;align-items:flex-start;gap:11px}
+    .find .vis{width:100%}
+    .device.phone{width:100%;border-radius:28px;border-width:6px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.06s!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="tx"><h1 id="ttl"></h1><p id="sub"></p></div>
+    <div class="ctl">
+      <div class="seg" role="group" id="devSeg">
+        <button data-dev="phone" aria-pressed="true"></button>
+        <button data-dev="desktop" aria-pressed="false"></button>
+      </div>
+      <div class="seg" role="group">
+        <button data-lang="en" aria-pressed="true">English</button>
+        <button data-lang="zh" aria-pressed="false">中文</button>
+      </div>
+      <button class="ghost" id="reset"></button>
+    </div>
+  </div>
+
+  <!-- STEP 1 + 2 -->
+  <div class="card">
+    <div class="stephd"><span class="n">1</span><h2 id="h1"></h2></div>
+    <p class="stepdesc" id="d1"></p>
+
+    <div class="split">
+      <div class="stage">
+        <div class="device phone lens" id="device">
+          <div class="notch"></div>
+          <div class="statusbar"><span id="clk">9:41</span><span class="rt"><i></i><i></i><i></i></span></div>
+          <div class="winbar"><span class="tl"><i></i><i></i><i></i></span><span class="url">flow.reading</span></div>
+          <div class="appbar"><span>‹</span><span id="apptitle"></span><span style="opacity:.4">···</span></div>
+          <div class="pane" id="pane">
+            <div class="pagewrap">
+              <div class="layer blurred" id="lBlur" aria-hidden="true"></div>
+              <div class="layer sharp" id="lSharp"></div>
+            </div>
+          </div>
+          <div class="gaze" id="gaze"></div>
+          <div class="hintarrow" id="hintArrow"><div class="bub" id="hintTx"></div></div>
+          <div class="helpnote" id="helpNote"><i></i><span></span></div>
+          <div class="veil"><div><div class="ring"></div><strong id="awayClock">00:00</strong><small id="awayNote"></small></div></div>
+          <div class="sheet" id="sheet"></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="panel">
+          <p class="ph" id="phSee"></p>
+          <div class="row"><span class="k" id="k1"></span><span class="v" id="v1">—</span></div>
+          <div class="row"><span class="k" id="k2"></span><span class="v"><span class="pips" id="v2"></span><span class="fw" id="v2w"></span></span></div>
+          <div class="row"><span class="k" id="k3"></span><span class="v" id="v3">—</span></div>
+        </div>
+
+        <div class="panel" style="flex:1;display:flex;flex-direction:column">
+          <div class="stephd" style="margin-bottom:6px"><span class="n">2</span><h2 id="h2" style="font-size:15px"></h2></div>
+          <p style="font-size:12.5px;color:var(--ink2);margin:0 0 13px;line-height:1.6" id="d2"></p>
+          <div class="chips" id="chips"></div>
+          <button class="bigbtn" id="go"></button>
+          <p class="aside" id="aside2"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card">
+    <div class="stephd"><span class="n">3</span><h2 id="h3"></h2></div>
+    <p class="stepdesc" id="d3"></p>
+    <div class="finds" id="finds"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="card">
+    <div class="stephd"><span class="n">4</span><h2 id="h4"></h2></div>
+    <p class="stepdesc" id="d4"></p>
+    <div class="changes" id="changes"></div>
+    <div class="applyrow">
+      <button class="bigbtn blue" id="apply"></button>
+      <button class="ghost" id="undo" style="display:none"></button>
+      <span class="applied" id="appliedTx" style="display:none"></span>
+    </div>
+    <div class="ba">
+      <div class="bacol">
+        <div class="balbl"><i></i><span id="baB"></span></div>
+        <div class="mini" id="miniBefore"></div>
+        <p class="bacap" id="capB"></p>
+      </div>
+      <div class="bacol">
+        <div class="balbl after"><i></i><span id="baA"></span></div>
+        <div class="mini hl" id="miniAfter"></div>
+        <p class="bacap" id="capA"></p>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+(function(){
+"use strict";
+const el=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+const T={
+ en:{
+  ttl:"A reading app that changes to fit how you actually read.",
+  sub:"Try it below. Read the article the way you normally would, get interrupted, and see what Flow does with that. It takes about a minute.",
+  dev:["Phone","Desktop"], reset:"Start over",
+  h1:"Read it",
+  d1:"Move your cursor over the text — <b>it stands in for your eyes.</b> Only the part you are looking at is sharp, exactly like real vision. Read at whatever pace you like; Flow is watching how you read, not testing you.",
+  apptitle:"Why reading breaks",
+  byline:"Attention research · notes",
+  hint:"Move your cursor onto the text to start reading",
+  helpStall:"You've been on this line a while — Flow held it steady for you",
+  phSee:"WHAT FLOW CAN SEE",
+  k1:"Where you are", k2:"Your focus", k3:"Times you went back",
+  focusWords:["Steady","Slipping","Low"],
+  h2:"Get interrupted",
+  d2:"Something pulls you away mid-article. How long were you gone?",
+  chips:[["30 sec","a glance"],["12 min","a phone call"],["2 days","you put it down"]],
+  go:"Something interrupted you", back:"Come back",
+  needRead:"Read a little first, then try this",
+  aside2:"Most apps put you back where the <b>screen</b> stopped. Flow puts you back where <b>you</b> stopped.",
+  awayNote:"Flow is holding your place — the line you finished, not the scroll position.",
+  sheetT:"Here's where you were",
+  sheetQ:"THE LAST LINE YOU ACTUALLY FINISHED",
+  sheetR:"WHAT IT WAS LEADING TO",
+  sheetGo:"Continue from here",
+  h3:"What Flow noticed",
+  d3:"Nothing here is preset. Every line below comes from what you just did in the reader above.",
+  emptyFind:"Read a little in the reader above, and this fills in.",
+  h4:"So next time, this article opens like this",
+  d4:"This is what all of the above was for. Pick what you want — untick anything, and change your mind afterwards.",
+  apply:"Apply these changes", undo:"Undo", appliedTx:"Applied — see the difference on the right",
+  baB:"How it opened for you today", baA:"How it will open next time",
+  capB:"A plain page. The same for everyone, every time.",
+  capA:"Same words, nothing rewritten. Only the way they reach you.",
+  foot:"Flow works all of this out on your own device. It remembers where you looked — never what the camera saw.",
+  finds:{
+   cover:"You read <b>{r} of {n} paragraphs</b> properly. <b>{s}</b> you passed over quickly, and <b>{u}</b> you never got to.",
+   coverAll:"You read <b>all {n} paragraphs</b> properly — a steady pace the whole way through.",
+   back:"You went back to re-read <b>{n} times</b>, and every one of them landed on a long sentence.",
+   backNone:"You barely went back at all. Your reading was steady.",
+   focus:"You started strong, and your focus began dropping around <b>paragraph {p}</b>.",
+   focusOK:"Your focus held up the whole way through.",
+   gap:"You skipped <b>paragraph {p}</b> — but paragraph {q} keeps using an idea that only paragraph {p} explains."},
+  chg:{
+   mark:["Remember the line you finished","So coming back never costs you a re-read"],
+   pace:["Break long paragraphs into three short steps","Same words, handed to you one piece at a time"],
+   anchor:["Highlight the whole sentence, not scattered words","Long sentences stay in one piece so you don't lose the thread"],
+   brk:["Suggest a break after {m} minutes","Placed at the end of a section, not mid-argument"],
+   gap:["Show paragraph {p} again first","20 seconds, before the part that depends on it"]},
+  mini:{ab:"Why reading breaks",
+   mark:"YOU STOPPED HERE",
+   steps:["What starts happening","What you take in","Why nobody notices"],
+   pill:"Worth 20 seconds first: paragraph {p}",
+   brk:"Break here · {m} min in"},
+  para:[
+   "Reading on a screen is not one smooth motion. Your eyes stop, jump, and stop again, about four times a second. You only take words in during the stops.",
+   "That is why this page is blurred everywhere except the small circle you are looking at. Your real vision works the same way. You never notice, because your eyes move faster than you can catch them.",
+   "When a text gets harder than you have energy for, something specific happens. You start jumping backwards to lines you already passed. Each stop gets longer, but you take in less. From the outside nothing looks wrong: you are still on the page, still scrolling, still apparently reading.",
+   "A reading app cannot see any of this. It knows how far you scrolled. It does not know where you stopped understanding. Those two places drift apart all the way through a long article.",
+   "That gap is what costs you. It is not the moment you lost focus. It is coming back: you return to a page you have to re-read before you can re-enter, and re-reading is exactly what made you lose focus in the first place.",
+   "So here is the question this project started from. What if the page could tell the difference, and change itself to match?"]
+ },
+ zh:{
+  ttl:"一个会根据用户真实的阅读习惯自适应的阅读应用。",
+  sub:"请按照你的阅读习惯，将鼠标指针代替目光读这篇文章， Flow 会记录你的行为。并在你走神后以最少的代价帮你重新回到文本",
+  dev:["手机端","电脑端"], reset:"重新开始",
+  h1:"Flow为用户注意力丢失的问题提供帮助",
+  d1:"把光标移到文字上——<b>它在这里代替你的眼睛。</b>此处为模拟真实视觉习惯，事实上，阅读依赖于视野中央的中央凹区域以获得清晰视觉，请按照你自己的习惯和速度进行阅读。",
+  apptitle:"阅读为什么会被中断？",
+  byline:"注意力研究 · 手记",
+  hint:"把光标移到文字上开始读",
+  helpStall:"用户在这一行停了一会儿——Flow 记住了用户的行为",
+  phSee:"FLOW 检测到的信息",
+  k1:"用户阅读进度", k2:"用户的专注度", k3:"用户回视次数",
+  focusWords:["稳定","逐渐下降","很低"],
+  h2:"用户中断了阅读",
+  d2:"设想你在生活中各个情境下，主动或被动地中断阅读的情况",
+  chips:[["30 秒","短暂走神"],["12 分钟","接了个电话"],["2 天","将阅读计划搁置"]],
+  go:"用户中断阅读的时间", back:"继续阅读",
+  needRead:"先试着阅读这篇文章再尝试这个功能吧",
+  aside2:"多数应用把用户放回<b>屏幕</b>就进度所在的位置。Flow 使用户回到<b>用户</b>注意力消失的位置。",
+  awayNote:"Flow 替你留着位置——是你读完的那一行，不是滚动条。",
+  sheetT:"用户的注意力刚才停在这里",
+  sheetQ:"用户离开前正在阅读这一句",
+  sheetR:"后续内容预览",
+  sheetGo:"从这里继续读",
+  h3:"Flow 为用户记录的注意力数据",
+  d3:"这里的数据来自用户刚刚在上面那台设备里的阅读行为。",
+  emptyFind:"请先阅读文章来获得数据。",
+  h4:"这篇文章下一次会这样打开",
+  d4:"下列为Flow在数据总结后为用户总结的建议功能。用户可自由选择，搭配使用。",
+  apply:"应用这些改动", undo:"撤销", appliedTx:"已应用——可在右下方模拟手机屏幕中查看变化",
+  baB:"初始状态时用户看到的文章", baA:"应用变化后用户看到的文章",
+  capB:"一张普通的页面。",
+  capA:"Flow改变的是用户重新回到文本时的方式。",
+  foot:"Flow 通过检测眼动行为进行调整，并不会保存任何涉及到用户隐私的数据。",
+  finds:{
+   cover:"用户认真阅读了 <b>{n} 段里的 {r} 段</b>。<b>{s} 段</b>是快速扫过的，还有 <b>{u} 段</b>没读完。",
+   coverAll:"<b>{n} 段你用户都认真读完了</b>——阅读状态稳定。",
+   back:"用户回头重读了 <b>{n} 次</b>，而且每一次都发生在长句子上。",
+   backNone:"用户几乎没有回头重读，注意力很集中。",
+   focus:"用户在开头很专注，大约到<b>第 {p} 段</b>开始逐渐丧失注意力。",
+   focusOK:"用户的专注度全程保持在优秀的状态。",
+   gap:"用户跳过了<b>第 {p} 段</b>——可能原因为第 {q} 段使用了只有第 {p} 段解释过的说法。"},
+  chg:{
+   mark:["记住用户读完的那一行","这样用户回归的时候不需要重读"],
+   pace:["把长段落拆成三小节","不更改文本，分段式提供内容"],
+   anchor:["整句高亮","通过强调长句子保持语义完整，用户因此不会中途丢失逻辑"],
+   brk:["读满 {m} 分钟提醒用户歇一下","放在某小节结束的地方，不会打断内容"],
+   gap:["先把第 {p} 段重新提供给用户进行回顾","放在后续新内容之前"]},
+  mini:{ab:"阅读为什么会被中断",
+   mark:"用户上次读到这里",
+   steps:["提要概览","用户实际吸收了多少内容","为什么没有注意到"],
+   pill:"先花 20 秒回顾：第 {p} 段",
+   brk:"在这里放松一下 · 用户已读 {m} 分钟"},
+  para:[
+   "阅读中的眼动主要分为两种基本形式：注视和扫视。注视是指眼球相对静止、获取信息的阶段，平均200-250毫秒，所有有用的视觉信息都在此期间被获取。扫视是眼球在注视点之间快速的跳跃运动，持续时间约为20-35毫秒，使视线从一个位置移动到另一个位置。",
+   "阅读依赖于视野中央的中央凹区域以获得清晰视觉，其左右的副中央凹区域视觉较为模糊但仍有辅助作用。这也是为什么这一页除了你正在看的那个小圆之外全是模糊的。正因为如此，大约15%-25%的单词在阅读过程中从未被注视。",
+   "当你读不下去的时候，你的视线会不经意开始回跳，去重读已经读过的内容；看似阅读时停留在文本上的时间更多，实际上用户真正吸收的内容却更少。而阅读还在继续， 在不断丢失信息的情况下，用户的注意力被无法吸收的信息干扰，注意力越来越涣散。",
+   "普通阅读应用无法提供帮助，它们只能记录用户读到了哪一页，却无法对注意力下降问题提供及时帮助。在一篇长文里最常见的阅读体验就是内容无法进入脑子，并且容易疲劳，频繁走神。",
+   "让你无法有效阅读的不仅仅是走神的问题，集中注意力回到文本的部分常常被忽略：用户回到确切文本位置必须先重读才能重新进入的文字，因后续阅读需要前文的铺垫和介绍。而重读恰恰就是当初让用户走神的原因。",
+   "所以这个项目从提出这个问题开始：如果阅读软件能分辨出用户走神和注意力回归的不同状态，并且自适应调整去配合用户的个人体验，会怎么样？"]
+ }
+};
+const DENSE=[2,4], DEP_P=3, DEP_ON=5;
+
+let lang='en', C=T.en, dev='phone';
+let words=[], sharpW=[], blurW=[];
+let gx=40,gy=40,tx=40,ty=40, curW=-1, curP=-1, maxP=-1, maxW=-1;
+let dwellStart=0, focus=100, backs=0, lastBackAt=0, dropAtP=null, started=false;
+let readMs=[], expMs=[], seenW=[], totW=[];
+let frontier=null, tier=1, away=false, appliedNow=false, picks={};
+let mouse={x:0,y:0,in:false}; let lastScrollAt=0, sessionStart=0;
+const device=el('device'), pane=el('pane'), gazeEl=el('gaze');
+
+/* ── text ─────────────────────────────────────────────────── */
+function tokens(t){ return lang==='zh' ? (t.match(/.{1,2}/g)||[]) : t.split(/\s+/).filter(Boolean); }
+function sentences(t){ return t.split(/(?<=[.。？?！!])\s*/).filter(s=>s.trim()); }
+function buildText(){
+  let h='<div class="byline">'+C.byline+'</div><h3 class="hd">'+C.apptitle+'</h3>';
+  let wi=0;
+  C.para.forEach((txt,pi)=>{
+    h+='<div class="p" data-p="'+pi+'">';
+    sentences(txt).forEach((sn,si)=>{
+      tokens(sn).forEach(w=>{
+        h+='<span class="w" data-i="'+wi+'" data-p="'+pi+'" data-s="'+si+'">'+w+(lang==='zh'?'':' ')+'</span>';
+        wi++;
+      });
+    });
+    h+='</div>';
+  });
+  el('lSharp').innerHTML=h; el('lBlur').innerHTML=h;
+  sharpW=[...el('lSharp').querySelectorAll('.w')];
+  blurW=[...el('lBlur').querySelectorAll('.w')];
+  measure();
+  readMs=C.para.map(()=>0);
+  seenW=C.para.map(()=>new Set());
+  totW=C.para.map(()=>0);
+  words.forEach(w=>totW[w.p]++);
+  expMs=C.para.map((t,i)=>tokens(t).length*(lang==='zh'?105:165)*(DENSE.includes(i)?1.2:1));
+}
+function measure(){
+  const base=el('lSharp').getBoundingClientRect();
+  words=sharpW.map((w,i)=>{
+    const r=w.getBoundingClientRect();
+    return {el:w,x:r.left-base.left+r.width/2,y:r.top-base.top+r.height/2,
+            p:+w.dataset.p,s:+w.dataset.s,i};
+  });
+}
+
+/* ── gaze loop ────────────────────────────────────────────── */
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min(60,now-(frame.last||now)); frame.last=now;
+  if(!away && mouse.in){
+    const r=pane.getBoundingClientRect();
+    const mx=mouse.x-r.left+pane.scrollLeft, my=mouse.y-r.top+pane.scrollTop;
+    if(Math.hypot(mx-tx,my-ty)>24){
+      let best=null,bd=1e9;
+      for(const w of words){const d=Math.hypot(w.x-mx,w.y-my); if(d<bd){bd=d;best=w;}}
+      if(best&&bd<150){tx=best.x;ty=best.y;land(best,now);} else {tx=mx;ty=my;}
+    }
+    if(curP>=0) readMs[curP]+=dt;
+    const dwell=(now-dwellStart)/1000;
+    if(dwell>1.4 && curW>=0) hold();
+    focus=clamp(focus-(dwell>1.4?0.020:0.0058+(DENSE.includes(curP)?0.004:0))*dt,12,100);
+    if(focus<46 && dropAtP===null && curP>=0 && now-sessionStart>15000) dropAtP=curP+1;
+  }
+  gx+=(tx-gx)*Math.min(1,dt/32); gy+=(ty-gy)*Math.min(1,dt/32);
+  const px=gx+(Math.random()-.5)*1.5, py=gy+(Math.random()-.5)*1.1;
+  device.style.setProperty('--gx',px+'px'); device.style.setProperty('--gy',py+'px');
+  gazeEl.style.left=(px-pane.scrollLeft+pane.offsetLeft)+'px';
+  gazeEl.style.top=(py-pane.scrollTop+pane.offsetTop)+'px';
+  gazeEl.classList.toggle('hide',away||!mouse.in);
+  paintSide();
+}
+function land(w,now){
+  if(w.i===curW)return;
+  if(curW>=0 && w.i<curW-2 && w.i<maxW-2 && now-lastBackAt>900 && now-lastScrollAt>450
+     && Math.abs(w.p-curP)<=1 && curW-w.i<60){
+    lastBackAt=now; backs++; focus=clamp(focus-2.5,12,100);
+  }
+  curW=w.i; if(w.i>maxW)maxW=w.i;
+  for(let k=w.i-1;k<=w.i+1;k++){const n=words[k]; if(n&&seenW[n.p])seenW[n.p].add(k);}
+  if(w.p!==curP){curP=w.p; if(w.p>maxP)maxP=w.p;}
+  if(!started){started=true; sessionStart=now; el('hintArrow').classList.add('off');}
+  dwellStart=now;
+  frontier={p:w.p,s:w.s};
+}
+function hold(){
+  const w=words[curW]; if(!w||w.el.classList.contains('held'))return;
+  sharpW.forEach(x=>x.classList.remove('held')); blurW.forEach(x=>x.classList.remove('held'));
+  words.filter(x=>x.p===w.p&&x.s===w.s).forEach(x=>{
+    x.el.classList.add('held'); if(blurW[x.i])blurW[x.i].classList.add('held');});
+  const n=el('helpNote'); n.querySelector('span').textContent=C.helpStall;
+  n.classList.add('show'); clearTimeout(hold.t); hold.t=setTimeout(()=>n.classList.remove('show'),3600);
+}
+
+/* ── side panel ───────────────────────────────────────────── */
+function paintSide(){
+  el('v1').textContent = curP<0 ? '—' : (lang==='zh' ? ('第 '+(curP+1)+' / '+C.para.length+' 段')
+                                                     : ((curP+1)+' of '+C.para.length));
+  const lvl = focus>72?0:(focus>48?1:2), on = focus>72?5:(focus>48?3:2);
+  let pips=''; for(let i=0;i<5;i++)pips+='<i class="'+(i<on?'on'+(lvl?' warn':''):'')+'"></i>';
+  el('v2').innerHTML=pips; el('v2w').textContent=C.focusWords[lvl];
+  el('v3').textContent = backs===0 ? (lang==='zh'?'0 次':'none')
+                                   : (lang==='zh'? backs+' 次' : backs+(backs>1?' times':' time'));
+}
+
+/* ── step 2 ───────────────────────────────────────────────── */
+const SECS=[30,12*60,2*24*3600];
+function fmtClock(s){
+  if(s>=86400){const d=Math.floor(s/86400);return lang==='zh'?(d+' 天'):(d+(d>1?' days':' day'));}
+  if(s>=3600)return Math.floor(s/3600)+(lang==='zh'?' 小时':'h');
+  return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');
+}
+function leave(){
+  if(!frontier){ const a=el('hintArrow'); el('hintTx').textContent=C.needRead;
+    a.classList.remove('off'); setTimeout(()=>{el('hintTx').textContent=C.hint; if(started)a.classList.add('off');},2400); return; }
+  away=true; device.classList.add('away');
+  el('go').textContent=C.back; el('go').classList.add('blue');
+  const total=SECS[tier], st=performance.now();
+  const iv=setInterval(()=>{
+    const k=Math.min(1,(performance.now()-st)/2200);
+    el('awayClock').textContent=fmtClock(Math.round(total*k*k));
+    if(k>=1)clearInterval(iv);
+  },40);
+}
+function back(){
+  away=false; device.classList.remove('away');
+  el('go').textContent=C.go; el('go').classList.remove('blue');
+  focus=clamp(focus+[4,18,34][tier],12,100);
+  sharpW.forEach(w=>w.classList.remove('frontier'));
+  words.filter(x=>x.p===frontier.p&&x.s===frontier.s).forEach(x=>x.el.classList.add('frontier'));
+  const ss=sentences(C.para[frontier.p]);
+  const q=ss[frontier.s]||ss[0];
+  const lead=sentences(C.para[Math.min(C.para.length-1,frontier.p+1)])[0];
+  el('sheet').innerHTML=
+    '<p class="st"><i><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h13M12 5l7 7-7 7"/></svg></i>'+C.sheetT+'</p>'+
+    '<p class="lbl">'+C.sheetQ+'</p><p class="quote">'+q+'</p>'+
+    '<p class="lbl">'+C.sheetR+'</p><p class="rec">'+lead+'</p>'+
+    '<button>'+C.sheetGo+'</button>';
+  setTimeout(()=>el('sheet').classList.add('show'),340);
+  el('sheet').querySelector('button').onclick=()=>{
+    el('sheet').classList.remove('show');
+    const w=words.find(x=>x.p===frontier.p&&x.s===frontier.s);
+    if(w){tx=w.x;ty=w.y;pane.scrollTo({top:Math.max(0,w.y-pane.clientHeight*0.45),behavior:'smooth'});}
+  };
+  renderFinds(); renderChanges();
+}
+
+/* ── step 3 ───────────────────────────────────────────────── */
+function cover(i){
+  if(i>maxP)return 'un';
+  const t=readMs[i]/Math.max(1,expMs[i]);            // did you spend the time
+  const v=(seenW[i]?seenW[i].size:0)/Math.max(1,totW[i]); // did your eyes go over it
+  if(v>0.45 && t>0.28) return 'read';
+  if(v>0.15 || t>0.10) return 'skim';
+  return 'skip';
+}
+function stats(){
+  const st=C.para.map((_,i)=>cover(i));
+  return {read:st.filter(x=>x==='read').length,
+          skim:st.filter(x=>x==='skim'||x==='skip').length,
+          un:st.filter(x=>x==='un').length, n:C.para.length, st};
+}
+function fill(s,v){return s.replace(/\{(\w+)\}/g,(m,k)=>v[k]!==undefined?v[k]:m);}
+function renderFinds(){
+  const host=el('finds');
+  if(maxP<0){host.innerHTML='<div class="empty">'+C.emptyFind+'</div>';return;}
+  const S=stats(), F=C.finds;
+  const row=(vis,tx)=>'<div class="find"><div class="vis">'+vis+'</div><div class="tx">'+tx+'</div></div>';
+  let out='';
+  out+=row('<div class="strip">'+S.st.map(x=>'<i class="'+(x==='read'?'read':x==='skim'?'skim':x==='skip'?'gapx':'')+'"></i>').join('')+'</div>',
+      S.read===S.n?fill(F.coverAll,{n:S.n}):fill(F.cover,{r:S.read,n:S.n,s:S.skim,u:S.un}));
+  if(backs>=2){
+    let d=''; for(let i=0;i<Math.min(backs,7);i++)d+='<i></i>';
+    out+=row('<div class="dots">'+d+'</div>',fill(F.back,{n:backs}));
+  }else{
+    out+=row('<div class="dots" style="justify-content:center"><i style="background:#12A150"></i></div>',F.backNone);
+  }
+  if(dropAtP!==null) out+=row('<div class="fade"><b></b></div>',fill(F.focus,{p:dropAtP}));
+  else out+=row('<div class="fade" style="background:var(--brand)"></div>',F.focusOK);
+  if(cover(DEP_P-1)!=='read'&&maxP>=DEP_P-1){
+    out+=row('<div class="strip">'+C.para.map((_,i)=>'<i class="'+(i===DEP_P-1?'gapx':i<=maxP?'read':'')+'"></i>').join('')+'</div>',
+      fill(F.gap,{p:DEP_P,q:DEP_ON}));
+  }
+  host.innerHTML=out;
+}
+
+/* ── step 4 ───────────────────────────────────────────────── */
+function changeList(){
+  const S=stats(), out=[{k:'mark'}];
+  if(S.read<S.n) out.push({k:'pace'});
+  if(backs>=2) out.push({k:'anchor'});
+  if(dropAtP!==null) out.push({k:'brk',m:Math.max(5,dropAtP*4)});
+  if(cover(DEP_P-1)!=='read'&&maxP>=DEP_P-1) out.push({k:'gap',p:DEP_P});
+  return out;
+}
+function renderChanges(){
+  const host=el('changes'); host.innerHTML='';
+  changeList().forEach(c=>{
+    if(picks[c.k]===undefined)picks[c.k]=true;
+    const t=C.chg[c.k];
+    const b=document.createElement('div');
+    b.className='chg'; b.setAttribute('role','checkbox'); b.setAttribute('aria-checked',picks[c.k]);
+    b.innerHTML='<span class="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>'+
+      '<span class="t">'+fill(t[0],c)+'<small>'+fill(t[1],c)+'</small></span>';
+    b.onclick=()=>{picks[c.k]=!picks[c.k];b.setAttribute('aria-checked',picks[c.k]);renderAfter();};
+    host.appendChild(b);
+  });
+  renderAfter();
+}
+function shell(inner){
+  const d=new Date(), t=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+  return '<div class="nt"></div><div class="sb"><span>'+t+'</span><span>▪▪▪</span></div>'+
+         '<div class="ab">'+C.mini.ab+'</div><div class="bd">'+inner+'</div>';
+}
+function renderBefore(){
+  el('miniBefore').innerHTML=shell('<p>'+C.para[2]+'</p><p>'+C.para[3]+'</p>');
+}
+function renderAfter(){
+  const on=k=>appliedNow&&picks[k];
+  const ss=sentences(C.para[2]); const join=lang==='zh'?'':' ';
+  let body='';
+  if(on('mark')) body+='<span class="mk">'+C.mini.mark+'</span>';
+  if(on('gap')) body+='<div class="pill"><span>'+fill(C.mini.pill,{p:DEP_P})+'</span></div>';
+  if(on('pace')){
+    [[0,0],[1,2],[3,ss.length-1]].forEach((r,i)=>{
+      const txt=ss.slice(r[0],r[1]+1).join(join); if(!txt)return;
+      body+='<div class="st"><div class="sh">'+(i+1)+' · '+C.mini.steps[i]+'</div><p style="margin:0">'+
+        (on('anchor')&&i===1?'<span class="high">'+txt+'</span>':txt)+'</p></div>';
+    });
+  }else{
+    body+='<p>'+(on('anchor')?ss.map((s,i)=>i===1?'<span class="high">'+s+'</span>':s).join(join):C.para[2])+'</p>';
+  }
+  const brk=changeList().find(x=>x.k==='brk');
+  if(on('brk')&&brk) body+='<div class="brk"><span class="ln"></span><span class="tg">'+fill(C.mini.brk,{m:brk.m})+'</span><span class="ln"></span></div>';
+  body+='<p>'+C.para[3]+'</p>';
+  el('miniAfter').innerHTML=shell(body);
+}
+
+/* ── chrome ───────────────────────────────────────────────── */
+function renderChrome(){
+  ['ttl','sub','h1','d1','h2','d2','h3','d3','h4','d4','aside2','foot','phSee','k1','k2','k3',
+   'baB','baA','capB','capA','appliedTx'].forEach(k=>{ if(el(k)&&C[k]!==undefined) el(k).innerHTML=C[k]; });
+  el('apptitle').textContent=C.apptitle;
+  el('hintTx').textContent=C.hint;
+  el('awayNote').textContent=C.awayNote;
+  el('reset').textContent=C.reset;
+  el('apply').textContent=C.apply;
+  el('undo').textContent=C.undo;
+  el('go').textContent=away?C.back:C.go;
+  [...el('devSeg').children].forEach((b,i)=>b.textContent=C.dev[i]);
+  const ch=el('chips'); ch.innerHTML='';
+  C.chips.forEach((c,i)=>{
+    const b=document.createElement('button'); b.setAttribute('aria-pressed',i===tier);
+    b.innerHTML='<b>'+c[0]+'</b>'+c[1];
+    b.onclick=()=>{tier=i;[...ch.children].forEach((x,k)=>x.setAttribute('aria-pressed',k===i));};
+    ch.appendChild(b);
+  });
+  const d=new Date(); el('clk').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+/* ── events ───────────────────────────────────────────────── */
+pane.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.in=true;},{passive:true});
+pane.addEventListener('mouseleave',()=>{mouse.in=false;});
+pane.addEventListener('scroll',()=>{lastScrollAt=performance.now();},{passive:true});
+el('go').onclick=()=>{away?back():leave();};
+el('apply').onclick=()=>{
+  appliedNow=true; renderAfter();
+  el('apply').style.display='none'; el('undo').style.display=''; el('appliedTx').style.display='';
+};
+el('undo').onclick=()=>{
+  appliedNow=false; renderAfter();
+  el('apply').style.display=''; el('undo').style.display='none'; el('appliedTx').style.display='none';
+};
+[...document.querySelectorAll('[data-dev]')].forEach(b=>b.onclick=()=>{
+  dev=b.dataset.dev;
+  document.querySelectorAll('[data-dev]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  device.classList.toggle('phone',dev==='phone'); device.classList.toggle('desktop',dev==='desktop');
+  device.style.setProperty('--fov',dev==='phone'?'118px':'148px');
+  setTimeout(measure,420);
+});
+[...document.querySelectorAll('[data-lang]')].forEach(b=>b.onclick=()=>{
+  lang=b.dataset.lang; C=T[lang];
+  document.querySelectorAll('[data-lang]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  document.documentElement.lang=lang==='zh'?'zh-CN':'en';
+  restart();
+});
+el('reset').onclick=restart;
+let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(measure,180);});
+setInterval(()=>{ if(started&&!away){ renderFinds(); if(!appliedNow) renderChanges(); } },2500);
+
+function restart(){
+  focus=100; backs=0; dropAtP=null; started=false; away=false; frontier=null;
+  curW=-1; curP=-1; maxP=-1; maxW=-1; appliedNow=false; picks={}; seenW=[]; totW=[];
+  device.classList.remove('away'); el('sheet').classList.remove('show'); el('helpNote').classList.remove('show');
+  el('hintArrow').classList.remove('off');
+  el('apply').style.display=''; el('undo').style.display='none'; el('appliedTx').style.display='none';
+  pane.scrollTop=0; gx=tx=40; gy=ty=40; dwellStart=performance.now();
+  renderChrome(); buildText(); renderBefore(); renderFinds(); renderChanges(); paintSide();
+}
+restart();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
